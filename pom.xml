@@ -10,13 +10,16 @@
 	</parent>
 	<groupId>com.bootcamp.reports</groupId>
 	<artifactId>bootcamp_reports</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>bootcamp_reports</name>
 	<description>Reports project for Spring Boot</description>
 	<properties>
 		<java.version>17</java.version>
 		<checkstyle.version>9.3</checkstyle.version>
-        <checkstyle-maven-plugin.version>3.2.1</checkstyle-maven-plugin.version>
+		<checkstyle-maven-plugin.version>3.2.1</checkstyle-maven-plugin.version>
+		<sonar.host.url>http://localhost:9002</sonar.host.url>
+		<sonar.login>admin</sonar.login>
+    	<sonar.password>1111</sonar.password>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -57,6 +60,12 @@
 		    <artifactId>springdoc-openapi-webflux-ui</artifactId>
 		    <version>1.6.4</version>
 		</dependency>
+		
+		<dependency>
+		    <groupId>org.sonarsource.scanner.maven</groupId>
+		    <artifactId>sonar-maven-plugin</artifactId>
+		    <version>3.9.0.2155</version> <!-- Utiliza la última versión disponible -->
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -73,7 +82,32 @@
 					</excludes>
 				</configuration>
 			</plugin>
-			
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle-maven-plugin.version}</version>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>
+                    <outputEncoding>${project.build.sourceEncoding}</outputEncoding>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <linkXRef>false</linkXRef>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+	            <groupId>org.sonarsource.scanner.maven</groupId>
+	            <artifactId>sonar-maven-plugin</artifactId>
+	            <version>3.9.0.2155</version> <!-- Utiliza la última versión disponible -->
+	        </plugin>
 		</plugins>
 	</build>
 

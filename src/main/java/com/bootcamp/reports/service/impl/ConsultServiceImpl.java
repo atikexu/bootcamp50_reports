@@ -1,5 +1,7 @@
 package com.bootcamp.reports.service.impl;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,9 @@ import com.bootcamp.reports.clients.AccountsRestClient;
 import com.bootcamp.reports.clients.CreditsRestClient;
 import com.bootcamp.reports.clients.CustomersRestClient;
 import com.bootcamp.reports.clients.TransactionsRestClient;
+import com.bootcamp.reports.dto.Accumulator;
+import com.bootcamp.reports.dto.AverageDay;
+import com.bootcamp.reports.dto.AverageMovements;
 import com.bootcamp.reports.dto.Customer;
 import com.bootcamp.reports.dto.Movements;
 import com.bootcamp.reports.dto.Products;
@@ -153,5 +158,58 @@ public class ConsultServiceImpl implements ConsultService{
 			});
 		}
 	}
+	
+	@Override
+	public Mono<Movements> commissionXAccountId(String id) {
+		LocalDateTime myDateObj = LocalDateTime.now();
+		return transactionsRestClient.getAllXProductId(id)
+				.filter(a -> a.getTransactionType().equals("COMISION"))
+				.filter(a -> (a.getTransactionDate().getMonthValue()==(myDateObj.getMonthValue())) && (a.getTransactionDate().getYear()==(myDateObj.getYear())))
+				.collectList().flatMap(transactions ->{
+					return accountsRestClient.getAccountById(id).flatMap(a -> {
+						return obtainCustomer(transactions, a.getCustomerId(), a.getTypeCustomer());
+				});
+		});	
+	}
+
+    @Override
+    public Mono<AverageMovements> averageBalancesXCustomerIdPerson(String id) {
+    	return customersRestClient.getPersonById(id).flatMap(p -> {
+			Customer customer = new Customer();
+			customer.setDocument(p.getDni());
+			customer.setNameCustomer(p.getName().concat(" ").concat(p.getLastName()));
+			customer.setTypeCustomer(p.getTypeCustomer());
+			return obtainTransactionsXCustomerId(id, customer);
+		});
+    }
+    
+    @Override
+    public Mono<AverageMovements> averageBalancesXCustomerIdCompany(String id) {
+    	return customersRestClient.getCompanyById(id).flatMap(p -> {
+			Customer customer = new Customer();
+			customer.setDocument(p.getRuc());
+			customer.setNameCustomer(p.getBusinessName());
+			customer.setTypeCustomer(p.getTypeCustomer());
+			return obtainTransactionsXCustomerId(id, customer);
+		});
+    }
+    
+    private Mono<AverageMovements> obtainTransactionsXCustomerId(String id, Customer customer) {
+    	return transactionsRestClient.getAllXCustomerId(id)
+				.groupBy(transaction -> transaction.getTransactionDate().toLocalDate())
+	            .flatMap(groupedFlux -> {
+	                return groupedFlux
+	                        .map(Transaction::getBalance)
+	                        .reduce(new Accumulator(), (acc, balance) -> acc.add(balance))
+	                        .map(accumulator -> {
+	                            LocalDate date = groupedFlux.key();
+	                            long count = accumulator.getCount();
+	                            double averageBalance = accumulator.getTotal() / count;
+	                            return new AverageDay(date, averageBalance);
+	                        });
+	            })
+	            .collectList()
+	            .map(averageDays -> new AverageMovements(customer, averageDays));
+    }
 
 }
