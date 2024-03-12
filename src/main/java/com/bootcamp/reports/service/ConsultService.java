@@ -1,6 +1,7 @@
 package com.bootcamp.reports.service;
 
 import com.bootcamp.reports.dto.AverageMovements;
+import com.bootcamp.reports.dto.DebitCreditMovements;
 import com.bootcamp.reports.dto.Movements;
 import com.bootcamp.reports.dto.Products;
 import reactor.core.publisher.Mono;
@@ -25,5 +26,7 @@ public interface ConsultService {
 	Mono<AverageMovements> averageBalancesXCustomerIdPerson(String id);
 	
 	Mono<AverageMovements> averageBalancesXCustomerIdCompany(String id);
+
+	Mono<DebitCreditMovements> debitsCreditXCustomerId(String id);
 
 }

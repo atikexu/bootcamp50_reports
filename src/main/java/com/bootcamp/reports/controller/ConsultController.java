@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bootcamp.reports.dto.AverageMovements;
+import com.bootcamp.reports.dto.DebitCreditMovements;
 import com.bootcamp.reports.dto.Movements;
 import com.bootcamp.reports.dto.Products;
 import com.bootcamp.reports.service.ConsultService;
@@ -91,6 +92,11 @@ public class ConsultController {
 	@GetMapping("/averagecompany/{id}")
     public Mono<AverageMovements> averageBalancesXCustomerIdCompany(@PathVariable String id){
 		return consultService.averageBalancesXCustomerIdCompany(id);
+    }
+	
+	@GetMapping("/debitcreditxcustomerid/{id}")
+    public Mono<DebitCreditMovements> debitsCreditXCustomerId(@PathVariable String id){
+		return consultService.debitsCreditXCustomerId(id);
     }
 
 }

@@ -10,16 +10,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Clase de transferencia de datos para los productos de los clientes
+ * Clase de tranferencia de datos para los movimientos de los clientes
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(Include.NON_NULL)
-public class Products {
-	private Customer customer;
-	private List<Account> account;
-	private List<Credit> credit;
-	private List<CreditCard> creditCard;
-	private List<Debit> debit;
+public class DebitCreditMovements {
+//	private Customer customer;
+	private List<Transaction> debit;
+	private List<Transaction> credit;
 }

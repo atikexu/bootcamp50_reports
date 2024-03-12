@@ -10,11 +10,13 @@ import org.springframework.stereotype.Service;
 import com.bootcamp.reports.clients.AccountsRestClient;
 import com.bootcamp.reports.clients.CreditsRestClient;
 import com.bootcamp.reports.clients.CustomersRestClient;
+import com.bootcamp.reports.clients.DebitRestClient;
 import com.bootcamp.reports.clients.TransactionsRestClient;
 import com.bootcamp.reports.dto.Accumulator;
 import com.bootcamp.reports.dto.AverageDay;
 import com.bootcamp.reports.dto.AverageMovements;
 import com.bootcamp.reports.dto.Customer;
+import com.bootcamp.reports.dto.DebitCreditMovements;
 import com.bootcamp.reports.dto.Movements;
 import com.bootcamp.reports.dto.Products;
 import com.bootcamp.reports.dto.Transaction;
@@ -39,6 +41,9 @@ public class ConsultServiceImpl implements ConsultService{
 	
 	@Autowired
 	CustomersRestClient customersRestClient;
+	
+	@Autowired
+	DebitRestClient debitRestClient;
 
 	/**
 	 * Devuelve la lista de productos de un cliente personal segun el id de cliente.
@@ -84,7 +89,9 @@ public class ConsultServiceImpl implements ConsultService{
         return accountsRestClient.getAllAccountXCustomerId(customerId).collectList().flatMap(acounts -> {
         	return creditsRestClient.getAllCreditXCustomerId(customerId).collectList().flatMap(credits -> {
         		return creditsRestClient.getAllCreditCardXCustomerId(customerId).collectList().flatMap(creditCards -> {
-        			return Mono.just(new Products(customer, acounts, credits, creditCards));
+        			return debitRestClient.getAllDebitsXCustomerId(customerId).collectList().flatMap(debits -> {
+            			return Mono.just(new Products(customer, acounts, credits, creditCards,debits));
+            		});
         		});
         	});
         });
@@ -211,5 +218,14 @@ public class ConsultServiceImpl implements ConsultService{
 	            .collectList()
 	            .map(averageDays -> new AverageMovements(customer, averageDays));
     }
+
+	@Override
+	public Mono<DebitCreditMovements> debitsCreditXCustomerId(String id) {
+		return transactionsRestClient.getAllXCustomerId(id).filter(d -> d.getProductType().equals("DEBIT_CARD")).take(10).collectList().flatMap(debit -> {
+        	return transactionsRestClient.getAllXCustomerId(id).filter(c -> c.getProductType().startsWith("TAR_CRED")).take(10).collectList().flatMap(credit -> {
+            		return Mono.just(new DebitCreditMovements(debit, credit));
+        	});
+        });
+	}
 
 }
